@@ -427,7 +427,7 @@ function testApiKey() {
 2. `스크립트 속성` 탭
 3. `+ 스크립트 속성 추가`
    - 속성: `ANTHROPIC_API_KEY`
-   - 값: `sk-ant-api03-...` (Claude API 키)
+   - 값: `[SECRET_MASKED] (Claude API 키)
 4. 저장
 
 ---
