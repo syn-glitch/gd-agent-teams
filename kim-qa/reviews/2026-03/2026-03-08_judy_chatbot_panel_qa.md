@@ -1,64 +1,73 @@
-# QA 보고서 — 주디 챗봇 사이드 패널 (v2.8.1)
+## 🕵️ 통합 QA 보고서: 주디 챗봇 사이드 패널 복원 (v2.8.4)
+
+### 기본 정보
+| 항목 | 내용 |
+|------|------|
+| QA ID | QA-2026-03-08-001 |
+| 기능명 | 주디 AI 비서 챗봇 사이드 패널 복원 |
+| 검수일 | 2026-03-08 |
+| 핑퐁 | 1회 / 5회 |
+| 대상 파일 | `judy_workspace.html`, `ai_chat.gs` |
+| 개발 담당 | 자비스 개발팀 (에이다 BE, 클로이 FE) |
+
+### 병렬 QA 결과
+| 영역 | 담당 | 점수 | CRITICAL | MAJOR | MINOR |
+|------|------|------|----------|-------|-------|
+| 기능 | 테스터 | 80 | 1 | 0 | 0 |
+| 보안 | 보안감사관 | 100 | 0 | 0 | 0 |
+| UX | UX검증관 | 100 | 0 | 0 | 0 |
+
+### Overall Score
+(80 × 0.4) + (100 × 0.3) + (100 × 0.3) = **92점**
+
+### 최종 판정
+❌ **반려** — Overall Score는 92점이나, 핵심 기능 작동을 불가능하게 하는 **CRITICAL 이슈 1건**이 발견되어 배포를 반려합니다.
 
 ---
-- **QA ID**: QA-2026-03-08-001
-- **검수 대상**: `src/frontend/judy_workspace.html` v2.8.1 (JARVIS-2026-03-08-003)
-- **검수일**: 2026-03-08
-- **검수자**: 김감사 QA팀 (병렬 QA)
-- **판정**: ❌ **반려**
----
 
-## 이슈 목록
+### 이슈 목록
 
-### 🔍 기능 QA (테스터)
-
-| ID | 심각도 | 이슈 | 상세 | 재현 |
-|----|--------|------|------|------|
-| F-1 | **CRITICAL** | JS가 DOM보다 먼저 실행 — 패널 미작동 | JS 코드(4406~4479행)가 `<script>` 안에서 `getElementById`로 패널 요소를 참조하지만, 패널 HTML(4483~4497행)은 `</script>` 뒤 `</body>` 직전에 배치됨. 따라서 `judyChatPanel`, `judyChatOverlay`, `judyChatInput` 등 모든 변수가 **null**. `toggleJudyChat()` 호출 시 `Cannot read properties of null` 에러 발생하여 패널이 열리지 않음 | "✨ 주디" 버튼 클릭 → 아무 반응 없음 (콘솔에 TypeError) |
-| F-2 | MAJOR | `judyChatInput.addEventListener` null 참조로 페이지 로드 에러 | 4476행에서 `judyChatInput`이 null인 상태에서 `.addEventListener('input', ...)` 호출 → 페이지 로드 시 JS 에러. 이후 스크립트 전체가 중단될 수 있음 | 페이지 로드 → 콘솔 에러 확인 |
-
-### 🛡️ 보안 QA (보안감사관)
-
-| ID | 심각도 | 이슈 | 상세 |
-|----|--------|------|------|
-| S-1 | MINOR | AI 응답 XSS 방어 조건부 의존 | `appendJudyMsg`에서 `typeof parseMd === 'function'` 체크 후 `sanitizeHtml(parseMd(content))` 사용. 만약 `parseMd`가 undefined면 `textContent`로 fallback하여 안전. 현재 구조상 문제 없으나, 방어 로직이 조건부인 점은 인지 필요 |
-| S-2 | MINOR | 사용자 인증 검증 적절 | `g_userName` 미존재 시 "로그인 정보가 없습니다" 반환 — 적절함 |
-
-### 🎨 UX QA (UX검증관)
-
-| ID | 심각도 | 이슈 | 상세 |
-|----|--------|------|------|
-| U-1 | MINOR | 모바일에서 "주디" 텍스트 숨김 시 버튼 의미 불명확 | 768px 이하에서 `.judy-toggle-label`이 `display: none` → 버튼이 "✨"만 표시. 시각적으로 챗봇 버튼인지 인지 어려움. `title` 속성 또는 아이콘 개선 권장 |
-| U-2 | MINOR | 타이핑 인디케이터 CSS 애니메이션 비작동 | `.judy-typing-dots::after`의 `content` 변경 애니메이션은 대부분 브라우저에서 지원하지 않음. `content` 속성은 animatable property가 아님. "주디가 답변 중..." 텍스트가 정적으로만 표시됨 |
-
-## 점수 산출
-
-| 영역 | 점수 | 비중 | 가중 점수 | 비고 |
-|------|------|------|-----------|------|
-| 기능 | 20/100 | ×0.4 | 8 | CRITICAL 1건 (패널 미작동) — 핵심 기능 전체 불능 |
-| 보안 | 90/100 | ×0.3 | 27 | MINOR 2건, 구조적 문제 없음 |
-| UX | 75/100 | ×0.3 | 22.5 | MINOR 2건, 기본 설계는 적절 |
-
-**Overall Score: 57.5 / 100**
-
-## 판정
-
-### ❌ 반려
-
-**사유**: CRITICAL 1건 (F-1: DOM 순서 오류로 패널 완전 미작동)
-
-## 수정 필요 항목 (자비스 개발팀 위임)
-
-| 우선순위 | ID | 수정 방향 |
-|----------|-----|----------|
-| 🔴 즉시 | F-1 | **해결안 A (권장)**: 패널 HTML을 `<script>` 태그 앞으로 이동. 또는 **해결안 B**: JS의 `getElementById` 호출부를 `DOMContentLoaded` 이벤트 또는 `</body>` 직전 별도 `<script>`로 분리 |
-| 🔴 즉시 | F-2 | F-1 해결 시 자동 해소 |
-| 🟡 권장 | U-1 | 모바일 토글 버튼에 `title="주디 AI 비서"` 추가 또는 🐰 아이콘 사용 |
-| 🟡 권장 | U-2 | CSS `content` 애니메이션 대신 3개 `<span>` dot으로 opacity 애니메이션 적용 |
-
-## 재검토 범위
-
-- F-1, F-2 수정 후 패널 열기/닫기 + 메시지 전송 + 응답 수신 동작 확인
-- 수정 최소 범위: HTML 배치 순서 또는 JS 실행 타이밍만 변경
+**1. [CRITICAL/기능] 챗봇의 AI 답변이 UI에 렌더링되지 않음 (스크립트 에러 발생)**
+- **재현 단계**:
+  1. 주디 챗봇 사이드 패널 열기
+  2. 입력창에 메시지("넷마블" 등) 입력 후 전송
+  3. 타이핑 인디케이터가 표시된 후, AI 응답이 화면에 출력되지 않음.
+- **기대 결과**: AI의 답변 메시지가 말풍선(또는 블록) 형태로 화면에 정상 출력되어야 함.
+- **실제 결과**: 백엔드 API 통신은 성공하여 응답 객체가 반환되나 화면에 표시되지 않음. 브라우저 콘솔에 `[object Object]` 처리 관련 에러 발생 예상.
+- **근본 원인 (Root Cause)**:
+  프론트엔드와 백엔드 간의 데이터 타입 불일치.
+  - 백엔드(`ai_chat.gs` 의 `processJudyWebChat`): `{ success: true, response: aiResponse }` 형태의 **객체**를 반환함.
+  - 프론트엔드(`judy_workspace.html` 의 `sendJudyChat`): 반환된 `response` 객체를 문자열로 취급하여 `appendJudyMsg(response, 'ai')`에 그대로 전달함.
+  - 이로 인해 문자열 전용 함수인 `parseMd()`가 객체를 파싱하려 시도하다가 에러(TypeError)를 발생시키고 실행이 중단됨.
+- **감점**: -20점
 
 ---
+
+### 보안 및 UX 검토 코멘트
+- **보안**: `Session.getActiveUser().getEmail()`을 우선 참조하여 클라이언트에서 변조된 `userName`의 위험성을 상쇄한 점 훌륭함. API 연동 보안 이상 없음.
+- **UX**: 패널 DOM 순서 이동 및 z-index 정리로 모바일 터치 및 표시 이슈(v2.8.2 지적 사항)가 완벽히 해결됨. 
+
+---
+
+### 개선 권고사항 (Action Items for Jarvis Team)
+자비스 개발팀 클로이 FE는 다음 사항을 수정하고 재QA를 요청해 주시기 바랍니다.
+
+- `src/frontend/judy_workspace.html` 의 `sendJudyChat` 함수 내부의 `withSuccessHandler` 콜백을 다음과 같이 수정하여 객체의 `response` 프로퍼티를 명시적으로 참조하도록 변경하세요.
+  ```javascript
+  .withSuccessHandler(function(response) {
+      judyTyping.classList.remove('show');
+      judyChatSend.disabled = false;
+      
+      // 백엔드 반환 타입 처리를 위한 방어 로직 추가
+      var msgText = response;
+      if (response && typeof response === 'object') {
+          msgText = response.response || JSON.stringify(response);
+      }
+      
+      if (msgText) {
+          appendJudyMsg(msgText, 'ai');
+      } else {
+          appendJudyMsg('응답을 받지 못했습니다. 다시 시도해주세요.', 'ai');
+      }
+  })
+  ```
