@@ -19,8 +19,8 @@ description: 대표님(SYN)의 회고 원문을 분석하여 3대 관점(강화/
 ## 3. 파일 생성 및 저장 규격
 분석이 완료되고 승인되면 다음 규격으로 파일을 생성합니다.
 
-- **저장 경로**: `GD_Agent_teams/SYN_회고/`
-- **파일명**: `YYYY-MM-DD_retrospective.md` (또는 지시된 주제명 포함)
+- **저장 경로**: `GD_Agent_teams/SYN_회고/[프로젝트명]/` (예: `Alive/`)
+- **파일명**: `YYYY-MM-DD_retrospective.md`
 - **필수 포함 섹션**:
     - **Header**: 날짜, 시간, 작성자(SYN), 키워드.
     - **Original Text**: 대표님이 작성한 회고 원문 **(토씨 하나 바꾸지 않고 전체 인용 필수)**.

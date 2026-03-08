@@ -1,0 +1,131 @@
+{
+  "project": {
+    "project_id": "BNK-DEV-2026-03-002",
+    "title": "재무 지출 계획 관리 자동화 시스템 개발",
+    "requested_by": "송PO (벙커 팀)",
+    "approved_by": "용남 대표",
+    "prd_path": "GD_Agent_teams/bunker/outputs/재무지출계획_PRD.md",
+    "priority": "high",
+    "deadline_mvp": "2026-03-15"
+  },
+
+  "context": {
+    "description": "기존 캐시플로우 봇(Code.gs v17.0.0)을 확장하여 '지출 계획 → 실행 알림 → 사후 분석' 3단계 사이클을 추가",
+    "existing_codebase": "google_apps_script/Code.gs",
+    "existing_sheet": "카드사용내역, 매출내역, 지출내역 시트",
+    "extends": "기존 슬래시커맨드(/지출), 모달, DM 프라이버시, 관리자 알림, Claude API 연동 패턴 재활용",
+    "admin_channel": "#관리자_지출관리 (기존 ADMIN_CHANNEL_ID 재사용)"
+  },
+
+  "tasks_mvp": [
+    {
+      "task_id": "T-MVP-001",
+      "title": "/지출계획 슬래시 커맨드 + 모달 구현",
+      "assigned_agent": "Ada (백엔드)",
+      "required_skills": ["GAS", "Slack API"],
+      "priority": "high",
+      "dependencies": [],
+      "input": "기존 /지출 커맨드(handleCommand, openTransactionModal)와 동일 패턴. Slack에 /지출계획 슬래시 커맨드 추가. 모달 필드: 지출항목(텍스트,필수), 예상금액(텍스트,필수), 지출예정일(datepicker,필수), 카테고리(static_select,필수 — 기존 카테고리 목록 재사용: 식대,교통비,소모품비,통신비,도서구입비,접대비,회식비,주유비,숙박비,기타), 업체명(텍스트,선택), 비교가정보(텍스트,선택 — 'A업체:14만원, B업체:16만원' 형태), 메모(텍스트,선택)",
+      "output_format": "Code.gs에 handlePlanCommand(), openPlanModal(), createPlanModal() 함수 추가",
+      "done_criteria": "/지출계획 입력 시 모달이 정상 표시되고, 제출 시 에러 없이 처리됨"
+    },
+    {
+      "task_id": "T-MVP-002",
+      "title": "지출계획 시트 생성 + 저장 로직",
+      "assigned_agent": "Ada (백엔드)",
+      "required_skills": ["GAS", "Google Sheets"],
+      "priority": "high",
+      "dependencies": ["T-MVP-001"],
+      "input": "신규 시트명: '지출계획'. 컬럼: plan_id(PLAN-YYYY-MM-NNN 자동채번), 등록일(Date), 등록자(실명), 등록자_slack_id, 소속팀, 지출항목, 예상금액(숫자), 지출예정일(Date), 카테고리, 업체명, 비교가정보(텍스트 그대로 저장), 메모, 상태('계획됨'으로 초기화), 실제금액(빈값), 실제지출일(빈값), 매칭_카드내역_row(빈값), 차이금액(수식=O-G), 차이율(수식=R/G*100), AI분석(빈값), 알림상태(빈값). 기존 saveToSheet() 패턴 참고.",
+      "output_format": "Code.gs에 savePlanToSheet() 함수 추가. 시트가 없으면 자동 생성 + 헤더 행 추가",
+      "done_criteria": "모달 제출 시 지출계획 시트에 정상 저장. plan_id 자동 채번."
+    },
+    {
+      "task_id": "T-MVP-003",
+      "title": "지출계획 등록 시 관리자 채널 노티",
+      "assigned_agent": "Ada (백엔드)",
+      "required_skills": ["GAS", "Slack API"],
+      "priority": "high",
+      "dependencies": ["T-MVP-002"],
+      "input": "기존 sendAdminNotification() 패턴 재활용. 계획 등록 완료 시 #관리자_지출관리 채널에 노티 전송. 메시지 형식: '📅 [신규 지출 계획 등록]\\n👤 등록자: @이름 (팀)\\n📦 항목: ...\\n💰 예상 금액: ...원\\n📆 예정일: ...\\n📂 카테고리: ...\\n🏪 업체: ...'. 등록자 DM에도 확인 메시지 전송.",
+      "output_format": "Code.gs에 sendPlanNotification() 함수 추가",
+      "done_criteria": "등록 시 #관리자_지출관리에 노티 정상 도착 + 등록자 DM 확인 메시지 정상 전송"
+    },
+    {
+      "task_id": "T-MVP-004",
+      "title": "일정 알림 시스템 (D-3, D-1, D-Day, D+3)",
+      "assigned_agent": "Ada (백엔드)",
+      "required_skills": ["GAS", "Slack API", "GAS Triggers"],
+      "priority": "high",
+      "dependencies": ["T-MVP-002"],
+      "input": "매일 09:00 KST에 실행되는 GAS 시간 트리거 함수 추가. 지출계획 시트에서 상태='계획됨'인 행을 스캔. 지출예정일과 오늘 날짜 차이 계산. D-3: 팀원 DM '📢 3일 후 [항목] 지출 예정 (금액원)'. D-1: '⚠️ 내일 [항목] 지출 예정'. D-Day: '🔔 오늘 [항목] 지출 예정. 완료 후 영수증을 업로드해주세요'. D+3(미집행): '❓ [항목]이 미집행 상태입니다. 상태를 업데이트해주세요'. 알림 발송 시 알림상태 컬럼에 기록(중복 방지). 발송된 알림은 #관리자_지출관리에도 요약 전송.",
+      "output_format": "Code.gs에 checkPlanReminders() 함수 + setupPlanReminderTrigger() 함수 추가",
+      "done_criteria": "트리거 설치 후 매일 09:00에 정상 작동. D-3/D-1/D-Day/D+3 시점에 올바른 메시지 발송. 중복 알림 없음."
+    },
+    {
+      "task_id": "T-MVP-005",
+      "title": "수동 매칭 (계획 ↔ 실제 지출 연결)",
+      "assigned_agent": "Ada (백엔드)",
+      "required_skills": ["GAS", "Slack API"],
+      "priority": "medium",
+      "dependencies": ["T-MVP-002"],
+      "input": "카드사용내역 저장(processAllPendingSaves) 완료 시, 동일 사용자의 미완료 지출계획 목록을 조회. 매칭 가능 후보가 있으면 DM으로 '이 지출이 기존 계획과 관련 있나요?' + 계획 목록(버튼)을 표시. 팀원이 버튼 클릭 시 → 지출계획 시트의 해당 행에 실제금액, 실제지출일, 매칭_카드내역_row 기록, 상태를 '완료'로 변경. '해당 없음' 버튼도 제공.",
+      "output_format": "Code.gs에 suggestPlanMatch() 함수 + handlePlanMatchAction() 함수 추가",
+      "done_criteria": "카드내역 저장 후 매칭 후보 제안 DM 정상 표시. 버튼 클릭 시 지출계획 시트 정상 업데이트."
+    },
+    {
+      "task_id": "T-MVP-006",
+      "title": "에이전트 가격비교 의견 (입력값 기반)",
+      "assigned_agent": "Ada (백엔드)",
+      "required_skills": ["GAS", "Claude API"],
+      "priority": "medium",
+      "dependencies": ["T-MVP-002"],
+      "input": "지출계획 등록 시 비교가정보가 입력되어 있으면 Claude Haiku에 분석 요청. 프롬프트: '사용자가 [항목]을 구매하려 합니다. 예상가: [금액]원. 비교가: [비교가정보]. 가장 경제적인 선택을 분석하고, 과거 동일 카테고리 구매 이력이 있다면 참고하여 간단한 의견을 한국어로 제공해주세요. 3문장 이내.' 결과를 등록자 DM에 '💡 에이전트 의견' 형식으로 전송.",
+      "output_format": "Code.gs에 generatePriceOpinion() 함수 추가",
+      "done_criteria": "비교가 입력 시 Claude 의견이 DM으로 정상 전송. 비교가 미입력 시 스킵."
+    }
+  ],
+
+  "tasks_advanced": [
+    {
+      "task_id": "T-ADV-001",
+      "title": "자동 매칭 엔진 (카드내역 ↔ 계획)",
+      "priority": "high",
+      "description": "카테고리 + 금액 범위(±30%) + 예정일 범위(±7일) + 업체명 유사도로 자동 매칭. 신뢰도 높으면 자동 연결, 낮으면 사용자 확인 요청."
+    },
+    {
+      "task_id": "T-ADV-002",
+      "title": "Claude AI 차이 분석·요약",
+      "priority": "high",
+      "description": "매칭 완료된 계획-실제 데이터를 Claude에 전달하여 차이 원인 분석 + 개선 제안. AI분석 컬럼에 저장."
+    },
+    {
+      "task_id": "T-ADV-003",
+      "title": "월간 종합 분석 보고",
+      "priority": "medium",
+      "description": "월말 트리거: 이번 달 전체 계획 vs 실제를 집계 → Claude 종합 요약 → #관리자_지출관리에 보고."
+    },
+    {
+      "task_id": "T-ADV-004",
+      "title": "네이버 쇼핑 API 최저가 자동 검색",
+      "priority": "low",
+      "description": "네이버 개발자센터 앱 등록 필요. GET https://openapi.naver.com/v1/search/shop.json 호출. 소모품/사무용품 한정."
+    }
+  ],
+
+  "technical_notes": {
+    "target_file": "google_apps_script/Code.gs",
+    "patterns_to_reuse": [
+      "handleCommand() → handlePlanCommand() 패턴",
+      "openTransactionModal() → openPlanModal() 패턴",
+      "saveToSheet() → savePlanToSheet() 패턴",
+      "sendAdminNotification() → sendPlanNotification() 패턴",
+      "processAllPendingSaves() 내에 suggestPlanMatch() 호출 추가",
+      "setupBackgroundTrigger() → setupPlanReminderTrigger() 패턴"
+    ],
+    "new_slash_command": "/지출계획 — Slack App 설정에서 추가 필요",
+    "new_trigger": "매일 09:00 시간 트리거 (checkPlanReminders)",
+    "new_sheet": "지출계획 (21개 컬럼)",
+    "deploy_header": "반드시 배포 헤더 업데이트 (v18.0.0+)"
+  }
+}
