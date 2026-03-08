@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '\\n=== GD Agent Teams 프로젝트 준비 완료 ===\\n사용 가능한 팀 커맨드: /자비스  /강철  /벙커  /꼼꼼이  /김감사\\n'"
+          }
+        ]
+      }
+    ]
+  }
+}
