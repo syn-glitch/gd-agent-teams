@@ -31,8 +31,19 @@
 | 일자 | 제목 | 주요 키워드 | 담당 에이전트 | 파일 링크 |
 |:---|:---|:---|:---|:---|
 | 26.03.12 | **이슈 자동화 워크플로우 메타회고** | #GitHub_Actions #Harness_2.0 #Automation | 꼼꼼이 | [이동](2026-03-12_이슈_자동화_워크플로우_메타회고록.md) |
+| 26.03.09 | **Project Alive 주간 회고** | #Project_Alive #Sync | 꼼꼼이 | [이동](Alive/2026-03-09_retrospective.md) |
 | 26.03.08 | **RAG 가치와 에이전트 오케스트레이션** | #RAG #Orchestration #Vector_DB | — | [이동](2026-03-08_RAG_가치와_에이전트_오케스트레이션.md) |
 | 26.03.08 | **3월 첫 주 종합 회고** | #Project_Alive #Milestone | — | [이동](2026-03-08_retrospective.md) |
+| 26.03.03 | **GD Agent Workflow 실패 회고** | #Workflow #Failure #Troubleshooting | 김감사 | [이동](2026-03-03_GD_Agent_Workflow_실패_회고.md) |
+| 26.03.03 | **GD Agent Workflow 실패 회고 (김감사 QA)** | #QA #Validation #Root_Cause | 김감사 | [이동](2026-03-03_GD_Agent_Workflow_실패_회고_김감사QA.md) |
+| 26.03.02 | **혜림AX 전사 에이전트 통합 회고록** | #HyerimAX #Integration #Full_Team | 꼼꼼이 | [이동](2026-03-02_혜림AX_전사_에이전트_통합_회고록.md) |
+
+## 📅 2026년 2월
+| 일자 | 제목 | 주요 키워드 | 담당 에이전트 | 파일 링크 |
+|:---|:---|:---|:---|:---|
+| 26.02.26 | **QA Retrospective Summary for Manager** | #QA #Management #Summary | 김감사 | [이동](2026-02-26_qa_retrospective_summary_for_manager.md) |
+| 26.02.26 | **QA Process Retrospective** | #QA #Process #Optimization | 김감사 | [이동](2026-02-26_qa_process_retrospective.md) |
+| 26.02.26 | **Kim QA Team Retrospective** | #Team_Internal #QA_Rules | 김감사 | [이동](2026-02-26_kim_qa_team_retrospective.md) |
 
 ## 📁 프로젝트별 회고
 - [**Project Alive**](Alive/)
